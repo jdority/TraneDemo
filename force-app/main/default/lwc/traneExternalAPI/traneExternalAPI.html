@@ -1,0 +1,26 @@
+<template>
+	<template if:true={showLoadingSpinner}>
+		<lightning-spinner size="small"></lightning-spinner>
+	</template>
+
+	<template if:true={hasRows}>
+		<div class="dataTableWrapper">
+			<c-salesforce-codex-data-table
+				key-field="id"
+				data={dataRow}
+				show-row-number-column="false"
+				hide-checkbox-column="true"
+				columns={columns}
+                column-widths-mode="fixed"
+				enable-infinite-loading={enableInfiniteLoadingStatus}
+				load-more-offset="0"
+				onloadmore={loadMoreData}
+			>
+			</c-salesforce-codex-data-table>
+
+			<div class="slds-align_absolute-center">
+				<div class="slds-text-body_small">{loadMoreStatus}</div>
+			</div>
+		</div>
+	</template>
+</template>

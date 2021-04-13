@@ -1,0 +1,19 @@
+<template>
+    <lightning-card title="View Invoices" icon-name="custom:custom83" class="slds-m-left_xx-small">
+        <lightning-button 
+            slot="actions" 
+            variant="brand" 
+            label="Pay Selected Invoices" 
+            title="Pay Invoices"
+            onclick={payInvoices} 
+            class="slds-m-left_x-small">
+        </lightning-button>
+        <div class="slds-p-around_medium lgc-bg">
+            <lightning-datatable 
+                columns={columns}
+                data={invoices} 
+                key-field="id">
+            </lightning-datatable>
+        </div>
+    </lightning-card>
+</template>

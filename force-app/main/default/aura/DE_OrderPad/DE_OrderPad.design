@@ -1,0 +1,6 @@
+<design:component>
+  <design:attribute name="storeId" label="storeId" />
+  <design:attribute name="odmId" label="odmId" />
+  <design:attribute name="priceBook" label="priceBook" />
+  <design:attribute name="accountId" label="accountId" />
+</design:component>

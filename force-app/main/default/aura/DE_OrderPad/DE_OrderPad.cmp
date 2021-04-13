@@ -1,0 +1,567 @@
+<!--
+  @description       : 
+  @author            : aravind@salesforce.com
+  @group             : 
+  @last modified on  : 01-28-2021
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+  Modifications Log 
+  Ver   Date         Author                               Modification
+  1.0   01-15-2021   ChangeMeIn@UserSettingsUnder.SFDoc   Initial Version
+-->
+<aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,lightning:availableForFlowScreens,forceCommunity:availableForAllPageTypes" access="global" controller="orderPadCntr">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+	<aura:attribute name="products" type="PricebookEntry[]" />
+	<aura:attribute name="cart" type="Map[]" />
+	<aura:attribute name="orderItemCart" type="OrderItem[]" />
+	<aura:attribute name="cartRecord" type="RG_Cart__c" />
+	<aura:attribute name="cartTotalPrice" type="Decimal" default="0" />
+	<aura:attribute name="cartTotalQuantity" type="Decimal" default="0" />
+	<aura:attribute name="taxPercentage" type="String" default="8.75" />
+	<aura:attribute name="tax" type="Decimal" />
+	<aura:attribute name="shipping" type="String" default="10.00" />
+	<aura:attribute name="title" type="String" default="Product Catalog" />
+	<aura:attribute name="orderTotal" type="Decimal" />
+	<aura:attribute name="formValues" type="Map" />
+	<aura:attribute name="userInfo" type="User" />
+	<aura:attribute name="expirationYears" type="String[]" default="2018,2019,2020,2021,2022,2023,2024,2025,2026" />
+	<aura:handler name="change" value="{!v.cart}" action="{!c.sumCart}" />
+	<aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+	<aura:handler event="c:ProductCatalogAddToCartEvent" action="{!c.addedToCart}" />
+	<aura:handler event="c:ProductCatalogShowSaveCart" action="{!c.showSaveCart}" />
+	<aura:attribute name="showSaveCartButton" type="Boolean" default="false" />
+
+	<!--Data Attributes-->
+	<aura:attribute name="productList" type="List" />
+	<aura:attribute name="selectedProductList" type="List" />
+	<aura:attribute name="searchProductList" type="PricebookEntry[]" />
+	<aura:attribute name="contactList" type="List" />
+	<aura:attribute name="recordId" type="string" />
+	<aura:attribute name="cartValue" type="Integer" />
+	<aura:attribute name="inputCartValue" type="Integer" default="1" />
+	<aura:attribute name="existingCart" type="Integer" default="0" />
+	<aura:attribute name="contactName" type="string" />
+	<aura:attribute name="contactBillingStreet" type="string" />
+	<aura:attribute name="contactBillingCity" type="string" />
+	<aura:attribute name="contactBillingState" type="string" />
+	<aura:attribute name="contactBillingCountry" type="string" />
+	<aura:attribute name="contactShippingStreet" type="string" />
+	<aura:attribute name="contactShippingCity" type="string" />
+	<aura:attribute name="contactShippingState" type="string" />
+	<aura:attribute name="contactShippingCountry" type="string" />
+	<aura:attribute name="storeId" type="string" default="0ZE3c000000kBGbGAM" />
+	<aura:attribute name="odmId" type="string" default="2Dm3c000000PJCLCA4" />
+	<aura:attribute name="priceBook" type="string" default="01s3c000000qDZrAAM" />
+	<aura:attribute name="accountId" type="string" default="0013c00001ssRQjAAM" />
+	<aura:attribute name="orderId" type="string" />
+
+	<!--Screen Attributes-->
+	<aura:attribute name="productCard" type="boolean" default="true" />
+	<aura:attribute name="summaryCard" type="boolean" default="false" />
+	<aura:attribute name="finishCard" type="boolean" default="false" />
+	<aura:attribute name="checkOutScreen1" type="boolean" default="true" />
+	<aura:attribute name="checkOutScreen2" type="boolean" default="false" />
+	<aura:attribute name="checkOutScreen3" type="boolean" default="false" />
+	<aura:attribute name="checkOutScreen4" type="boolean" default="false" />
+	<aura:attribute name="showEditBA" type="boolean" default="false" />
+	<aura:attribute name="showEditSA" type="boolean" default="false" />
+	<aura:attribute name="showNavigation" type="boolean" default="false" />
+
+	<lightning:card title="B2B OrderPad" iconName="standard:store_group">
+		<p class="slds-p-horizontal_small">
+			<div class="slds-box">
+				<div>
+					<div class="slds-clearfix">
+						<div class="slds-float_right">
+							<button class="slds-button slds-button_neutral" onclick="{!c.clearCart}">
+								<lightning:icon iconName="utility:cart" alternativeText="Utility image" title="Image" size="x-small" />
+
+								Clear Cart
+							</button>
+							<button class="slds-button slds-button_neutral" onclick="{!c.showCart}">
+								<lightning:icon iconName="utility:cart" alternativeText="Utility image" title="Image" size="x-small" />
+
+								View Cart&nbsp;({!v.cartTotalQuantity}&nbsp;items)
+							</button>
+						</div>
+					</div>
+				</div>
+				<!--Search Product Card-->
+				<aura:if isTrue="{!v.productCard}">
+
+				<!-- <p>{!$Browser.formFactor}</p> -->
+
+					<aura:if isTrue="{! $Browser.formFactor == 'DESKTOP'}">
+						<div class="slds-scrollable_y" style="height: 372px; width: 1172px">
+							<aura:iteration items="{!v.products}" var="product" indexVar="index">
+								<c:ProductCatalogItemRG index="{!index}" product="{!product}" cart="{!v.cart}" />
+							</aura:iteration>
+						</div>
+					</aura:if>
+
+					<aura:if isTrue="{! $Browser.formFactor != 'DESKTOP'}">
+						<div class="slds-grid slds-wrap">
+							<aura:iteration items="{!v.products}" var="product" indexVar="index">
+								<c:ProductCatalogItemRG index="{!index}" product="{!product}" cart="{!v.cart}" />
+							</aura:iteration>
+						</div>
+					</aura:if>
+				</aura:if>
+
+				<!--Summary Card-->
+				<aura:if isTrue="{!v.summaryCard}">
+					<aura:if isTrue="{!v.checkOutScreen1}">
+						<div class="container">
+							<lightning:tabset selectedTabId="one">
+								<lightning:tab label="Check out" id="one">
+									<div class="slds-align_absolute-center">
+										<h2 style="color: #1b5297">
+											<b>Summary</b>
+										</h2>
+									</div>
+									<hr />
+
+									<!--Img-->
+									<div class="slds-grid slds-wrap products">
+										<div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12 slds-large-size_2-of-12">
+											<div class="product_image">
+												<lightning:formattedRichText value="{!v.selectedProducts.Image}" class="prod_img" />
+											</div>
+										</div>
+										<div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-large-size_6-of-12">
+											<div class="product_details">
+												<div class="slds-text-heading_medium product_name">{!v.selectedProducts.Name}</div>
+												<div class="slds-text-heading_medium">$ {!v.selectedProducts.Price}</div>
+											</div>
+										</div>
+										<div class="slds-col slds-size_6-of-12 slds-medium-size_3-of-12 slds-large-size_2-of-12" style="text-align: center">
+											<div class="quantity">
+												<div>
+													<lightning:input type="number" name="input1" label="Quantity" value="1" />
+												</div>
+											</div>
+										</div>
+										<div class="slds-col slds-size_6-of-12 slds-medium-size_3-of-12 slds-large-size_2-of-12" style="text-align: center">
+											<div class="add_button">
+												<button class="slds-button slds-button_brand" onclick="{!c.handleClick}">Delete</button>
+											</div>
+										</div>
+									</div>
+
+									<hr />
+									<div class="slds-clearfix">
+										<div class="slds-float_right">
+											<div style="color: #1b5297">
+												<div class="slds-text-heading_small">Sub Total:$ 514</div>
+												<div class="slds-text-heading_small">Tax:$100</div>
+												<div class="slds-text-heading_small">
+													<b>Total:$ 614</b>
+												</div>
+											</div>
+										</div>
+									</div>
+								</lightning:tab>
+							</lightning:tabset>
+							<div class="slds-box">
+								<div class="slds-clearfix">
+									<div class="slds-float_left">
+										<button class="slds-button slds-button_text-destructive" onclick="{!c.backToProducts}">Cancel</button>
+									</div>
+									<div class="slds-float_right">
+										<button class="slds-button slds-button_brand" onclick="{!c.goToNextScreen}">Proceed to order</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</aura:if>
+					<aura:if isTrue="{!v.checkOutScreen2}">
+						<div class="container">
+							<lightning:tabset selectedTabId="one">
+								<lightning:tab label="Check out" id="one">
+									<div class="slds-align_absolute-center">
+										<h2 style="color: #1b5297">
+											<b>Shipping Address</b>
+										</h2>
+									</div>
+									<hr />
+									<fieldset class="slds-form-element">
+										<div class="slds-form-element__control">
+											<span class="slds-radio">
+												<input type="radio" id="radio-49" value="radio-49" name="default" checked="true" />
+												<label class="slds-radio__label" for="radio-49">
+													<span class="slds-radio_faux"></span>
+													<span class="slds-form-element__label" style="color: #004487">
+														{!v.contactName}<br />
+														<p style="margin-left: 20px">{!v.contactBillingStreet},</p>
+														<p style="margin-left: 20px">{!v.contactBillingCity},</p>
+														<p style="margin-left: 20px">{!v.contactBillingState},{!v.contactBillingCountry}</p>
+													</span>
+												</label>
+												<br />
+											</span>
+											<hr />
+											<span class="slds-radio">
+												<input type="radio" id="radio-50" value="radio-50" name="default" />
+												<label class="slds-radio__label" for="radio-50">
+													<span class="slds-radio_faux"></span>
+													<span class="slds-form-element__label" style="color: #004487">
+														{!v.contactName} <br />
+														<p style="margin-left: 20px">{!v.contactShippingStreet}</p>
+														<p style="margin-left: 20px">{!v.contactShippingCity}</p>
+														<p style="margin-left: 20px">{!v.contactShippingState},{!v.contactShippingCountry}</p>
+													</span>
+												</label>
+											</span>
+										</div>
+									</fieldset>
+									<hr />
+								</lightning:tab>
+							</lightning:tabset>
+							<div class="slds-box">
+								<div class="slds-clearfix">
+									<div class="slds-float_left">
+										<button class="slds-button slds-button_text-destructive" onclick="{!c.backToProducts}">Cancel</button>
+									</div>
+									<div class="slds-float_right">
+										<button class="slds-button slds-button_brand" onclick="{!c.goToNextScreen2}">Billing Address</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</aura:if>
+					<aura:if isTrue="{!v.checkOutScreen3}">
+						<div class="container">
+							<lightning:tabset selectedTabId="one">
+								<lightning:tab label="Check out" id="one">
+									<div class="slds-align_absolute-center">
+										<lightning:icon iconName="standard:address" size="small" />
+										<h2 style="color: #1b5297">
+											<b>Shipping Address</b>
+										</h2>
+									</div>
+									<hr />
+									<fieldset class="slds-form-element">
+										<div class="slds-form-element__control">
+											<span class="slds-radio">
+												<input type="radio" id="radio-49" value="radio-49" name="default" checked="" />
+												<label class="slds-radio__label" for="radio-49">
+													<span class="slds-radio_faux"></span>
+													<span class="slds-form-element__label" style="color: #004487">
+														{!v.contactName}<br />
+														<p style="margin-left: 20px">{!v.contactBillingStreet},</p>
+														<p style="margin-left: 20px">{!v.contactBillingCity},</p>
+														<p style="margin-left: 20px">{!v.contactBillingState},{!v.contactBillingCountry}</p>
+													</span>
+												</label>
+											</span>
+											<hr />
+											<span class="slds-radio">
+												<input type="radio" id="radio-50" value="radio-50" name="default" checked="true" />
+												<label class="slds-radio__label" for="radio-50">
+													<span class="slds-radio_faux"></span>
+													<span class="slds-form-element__label" style="color: #004487">
+														{!v.contactName} <br />
+														<p style="margin-left: 20px">{!v.contactShippingStreet}</p>
+														<p style="margin-left: 20px">{!v.contactShippingCity}</p>
+														<p style="margin-left: 20px">{!v.contactShippingState},{!v.contactShippingCountry}</p>
+													</span>
+												</label>
+											</span>
+											<button class="slds-button slds-button_neutral" onclick="{!c.moveToSAEditScreen}">Edit Address</button>
+										</div>
+									</fieldset>
+									<hr />
+									<lightning:input type="number" name="name" label="Please enter your  Purchase Number" />
+								</lightning:tab>
+							</lightning:tabset>
+							<div class="slds-box">
+								<div class="slds-clearfix">
+									<div class="slds-float_left">
+										<button class="slds-button slds-button_text-destructive" onclick="{!c.backToProducts}">Cancel</button>
+									</div>
+									<div class="slds-float_right">
+										<button class="slds-button slds-button_brand" onclick="{!c.goToFinishScreen}">Order</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</aura:if>
+					<aura:if isTrue="{!v.checkOutScreen4}">
+						<div class="container">
+							<lightning:tabset selectedTabId="one">
+								<lightning:tab label="Check out" id="one">
+									<div class="slds-align_absolute-center">
+										<h2 style="color: #1b5297">
+											<b>Contact Deatils</b>
+										</h2>
+									</div>
+									<hr />
+									<lightning:input name="input2" label="Mobile" value="+91 8095931954" />
+									<lightning:input name="input2" label="Email" value="ababub@salesforce.com" />
+									<hr />
+									<lightning:input type="number" name="name" label="Please enter your  Purchase Number" />
+								</lightning:tab>
+							</lightning:tabset>
+							<div class="slds-box">
+								<div class="slds-clearfix">
+									<div class="slds-float_left">
+										<button class="slds-button slds-button_text-destructive" onclick="{!c.backToProducts}">Cancel</button>
+									</div>
+									<div class="slds-float_right">
+										<button class="slds-button slds-button_brand" onclick="{!c.goToFinishScreen}">Order</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</aura:if>
+				</aura:if>
+
+				<!-- Shopping Cart -->
+
+				<div aura:id="modal" role="dialog" tabindex="-1" class="slds-modal slds-modal--large" aria-labelledby="header43">
+					<div class="slds-modal__container" style="max-width: 580px">
+						<div class="slds-modal__header">
+							<lightning:buttonIcon
+								class="slds-button slds-modal__close slds-button--icon-inverse"
+								iconName="utility:close"
+								variant="bare"
+								onclick="{! c.closeCart }"
+								alternativeText="Close Cart."
+							/>
+							<h2 id="header43" class="slds-text-heading--medium">Shopping Cart</h2>
+						</div>
+						<div class="slds-modal__content slds-p-around--medium">
+
+							<!-- Desktop -->
+							<aura:if isTrue="{! $Browser.formFactor == 'DESKTOP'}">
+
+								<table class="slds-table slds-table--bordered slds-table--cell-buffer">
+									<thead>
+										<tr class="slds-text-title--caps">
+											<th scope="col">
+												<div class="slds-truncate" title="Product Name">Product Name</div>
+											</th>
+											<th scope="col">
+												<div class="slds-truncate" title="Unit Price">Unit Price</div>
+											</th>
+											<th scope="col">
+												<div class="slds-truncate" title="Quantity">Quantity</div>
+											</th>
+											<th scope="col">
+												<div class="slds-truncate" title="Total Price">Total Price</div>
+											</th>
+											<th scope="col">
+												<div class="slds-truncate" title="Remove">&nbsp;</div>
+											</th>
+										</tr>
+									</thead>
+									<tbody>
+										<aura:iteration items="{!v.cart}" var="cartItem" indexVar="index">
+											<tr>
+												<th scope="row">
+
+													<div class="product_image">
+														<aura:if isTrue="{!(cartItem.product.Image_URL__c != null)}">
+															<img src="{!cartItem.product.Image_URL__c}" />
+														</aura:if>
+									
+														<aura:if isTrue="{!(cartItem.product.Image_URL__c == null)}">
+															<aura:if isTrue="{!(cartItem.product.Image__c != null)}">
+																<img src="{!$SfdcSite.pathPrefix + '/servlet/servlet.FileDownload?file=' + cartItem.product.Image__c}" />
+															</aura:if>
+														</aura:if>
+													</div>
+
+													<div class="slds-truncate">
+														<a href="javascript:void(0);">{!cartItem.name}</a>
+													</div>
+												</th>
+												<td>
+													<div class="slds-truncate">
+														<ui:outputCurrency value="{!cartItem.price}" />
+													</div>
+												</td>
+												<td>
+													<div class="slds-truncate">
+														<div class="slds-form-element">
+															<div class="slds-form-element__control">
+																<input
+																	onchange="{!c.changeQuantity}"
+																	style="width: 150px"
+																	type="number"
+																	class="slds-input"
+																	value="{!cartItem.quantity}"
+																	data-id="{!index}"
+																/>
+															</div>
+														</div>
+													</div>
+												</td>
+												<td>
+													<div class="slds-truncate">
+														<ui:outputCurrency value="{!cartItem.total}" />
+													</div>
+												</td>
+												<td>
+													<div class="slds-truncate">
+														<a href="" onclick="{!c.removeItem}" data-id="{!index}">Remove</a>
+													</div>
+												</td>
+											</tr>
+										</aura:iteration>
+										<tr>
+											<th scope="row">
+												<div class="slds-truncate">
+													<a href="javascript:void(0);"></a>
+												</div>
+											</th>
+											<td>
+												<div class="slds-truncate"></div>
+											</td>
+											<td>
+												<div class="slds-truncate">Order Subtotal</div>
+											</td>
+											<td>
+												<div class="slds-truncate">
+													<ui:outputCurrency value="{!v.cartTotalPrice}" />
+												</div>
+											</td>
+											<td>
+												<div class="slds-truncate"></div>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+
+							</aura:if>
+
+							<!-- Non-Desktop -->
+							<aura:if isTrue="{! $Browser.formFactor != 'DESKTOP'}">
+
+								<div class="slds-col slds-small-size_12-of-12 slds-large-size_6-of-12">
+
+									<aura:iteration items="{!v.cart}" var="cartItem" indexVar="index">
+
+										<article class="slds-card slds-card_boundary slds-m-around_xx-small">
+							
+											<div class="slds-card__body slds-card__body_inner">
+
+												<div class="slds-grid">
+
+													<div class="slds-col slds-size_1-of-2">
+
+														<div class="product_image">
+															<aura:if isTrue="{!(cartItem.product.Image_URL__c != null)}">
+																<img src="{!cartItem.product.Image_URL__c}" />
+															</aura:if>
+										
+															<aura:if isTrue="{!(cartItem.product.Image_URL__c == null)}">
+																<aura:if isTrue="{!(cartItem.product.Image__c != null)}">
+																	<img src="{!$SfdcSite.pathPrefix + '/servlet/servlet.FileDownload?file=' + cartItem.product.Image__c}" />
+																</aura:if>
+															</aura:if>
+														</div>
+
+													</div>
+
+													<div class="slds-col slds-size_1-of-2">
+								
+														<div class="slds-form-element__static">
+															<div class="slds-text-heading_small product_name">{!cartItem.name}</div>
+														</div>
+									
+														<div class="slds-form-element__static">
+															<div class="">Unit Price: <ui:outputCurrency value="{!cartItem.price}" /></div>
+														</div>
+
+														<div class="slds-form-element__static">
+															Total Price: <ui:outputCurrency value="{!cartItem.total}" />
+														</div>
+
+													</div>
+
+												</div>
+							
+											</div>
+							
+											<footer class="slds-card__footer">
+							
+												<div class="slds-grid slds-wrap">
+							
+													<div class="slds-col slds-size_2-of-3">
+														<lightning:input aura:id="cartQuantity" name="{! 'cartQuantity_' + index}" label="Qty" minlength="1" maxlength="4" 
+															type="number"
+															value="{!cartItem.quantity}"  
+															onchange="{!c.changeQuantity}"
+															step="1" 
+															style="width: 75px !important; text-align: right;" 
+															variant="label-hidden" />
+													</div>
+							
+													<div class="slds-col">
+														<!--<a href="" onclick="{!c.removeItem}" data-id="{!index}">Remove</a>-->
+
+														<lightning:button class="slds-form-element" variant="brand" label="Remove" onclick="{! c.removeItem }" value="{!index}" />
+													</div>
+							
+												</div>
+							
+											</footer>
+							
+										</article>
+
+									</aura:iteration>
+
+								</div>
+
+							</aura:if>
+
+						</div>
+						<div class="slds-modal__footer">
+							<div class="slds-float--left">
+								<button class="slds-button slds-button--neutral" onclick="{! c.clearCart }">Clear Cart</button>
+							</div>
+							<button class="slds-button slds-button--neutral" onclick="{! c.closeCart }">Continue Shopping</button>
+							<button class="slds-button slds-button--brand" onclick="{!c.goToNextScreen}">Checkout</button>
+						</div>
+					</div>
+				</div>
+
+				<!-- Finish Card-->
+				<aura:if isTrue="{!v.finishCard}">
+					<div class="container">
+						<lightning:tabset selectedTabId="one">
+							<lightning:tab label="Check out" id="one">
+								<div class="slds-align_absolute-center">
+									<h2 style="color: #1b5297">
+										<b>Confirmation</b>
+									</h2>
+								</div>
+								<hr />
+								<center>
+									<lightning:icon iconName="action:approval" alternativeText="Approved" title="Approved" />
+									<div class="slds-text-heading_medium slds-align_absolute-center" style="color: #1b5297">Order has been placed!</div>
+								</center>
+								<br />
+								<hr />
+							</lightning:tab>
+						</lightning:tabset>
+						<div class="slds-box">
+							<div class="slds-align_absolute-center">
+								<aura:if isTrue="{!v.showNavigation == false}">
+									<button class="slds-button slds-button_brand" onclick="{!c.getOrderDetails}">Activate Order</button>
+								</aura:if>
+								<aura:if isTrue="{!v.showNavigation}">
+									<button class="slds-button slds-button_brand" onclick="{!c.navigateToRecord}">Navigate to Order</button>
+								</aura:if>
+							</div>
+						</div>
+					</div>
+				</aura:if>
+			</div>
+		</p>
+	</lightning:card>
+	<div aura:id="backdrop" class="slds-backdrop"></div>
+</aura:component>

@@ -1,0 +1,10 @@
+<template>  
+    <lightning-card title="Opportunity">  
+      <lightning-button slot="actions" label="Delete" onclick={deleteRecord}></lightning-button>  
+      <div class="slds-box">  
+        <lightning-datatable  
+        data={oppList.data} columns={cols} key-field="Id">  
+        </lightning-datatable>  
+      </div>  
+    </lightning-card>  
+  </template> 
