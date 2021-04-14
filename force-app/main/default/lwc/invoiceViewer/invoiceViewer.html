@@ -12,6 +12,14 @@
             <lightning-datatable 
                 columns={columns}
                 data={invoices} 
+                onrowselection={handleRowUpdate}
+                key-field="id">
+            </lightning-datatable>
+        </div>
+        <div class="slds-p-around_medium lgc-bg">
+            <lightning-datatable 
+                columns={columns}
+                data={selectedInvoices} 
                 key-field="id">
             </lightning-datatable>
         </div>
